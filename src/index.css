@@ -371,3 +371,28 @@ p { color: var(--muted-foreground); margin-bottom: 1rem; }
   transform: translate(-4px, -4px);
   box-shadow: var(--shadow);
 }
+
+/* Neo-Brutalism Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-left: 2px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--foreground);
+  border: 3px solid var(--background);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--background);
+}

@@ -323,14 +323,16 @@ export const HistoryPage = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-32px)] max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-32px)] max-w-lg max-h-[90vh] bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden"
             >
-              <div className="flex justify-between items-start mb-6">
+              <div className="flex justify-between items-center p-6 border-b-2 border-black bg-white shrink-0 z-10">
                 <h2 className="text-2xl font-black">Post Details</h2>
                 <button onClick={() => setSelectedPost(null)} className="p-2 bg-gray-100 hover:bg-[#fef08a] hover:-translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-xl transition-all">
                   <X size={20} strokeWidth={3} />
                 </button>
               </div>
+
+              <div className="p-6 overflow-y-auto flex-1 bg-white">
 
               {selectedPost.mediaItems?.[0]?.url && (
                 <div className="w-full h-48 bg-secondary border-2 border-black rounded-xl overflow-hidden mb-6 flex items-center justify-center">
@@ -388,30 +390,30 @@ export const HistoryPage = () => {
                         </div>
                       </div>
                     ) : postAnalytics?.analytics ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.likes || 0}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Likes</p>
+                      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.likes || 0}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Likes</p>
                         </div>
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.comments || 0}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Cmmts</p>
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.comments || 0}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Cmmts</p>
                         </div>
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.shares || 0}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Shares</p>
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.shares || 0}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Shares</p>
                         </div>
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.views || postAnalytics.analytics.impressions || 0}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Views</p>
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.views || postAnalytics.analytics.impressions || 0}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Views</p>
                         </div>
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.saves || 0}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Saves</p>
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.saves || 0}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Saves</p>
                         </div>
-                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
-                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.engagementRate ? `${postAnalytics.analytics.engagementRate}%` : '0%'}</p>
-                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Eng.</p>
+                        <div className="bg-white border-2 border-black p-3 rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl sm:text-2xl font-black text-black leading-none mb-1.5">{postAnalytics.analytics.engagementRate ? `${postAnalytics.analytics.engagementRate}%` : '0%'}</p>
+                          <p className="text-[10px] uppercase font-black text-gray-600 tracking-wider">Eng.</p>
                         </div>
                       </div>
                     ) : (
@@ -426,6 +428,7 @@ export const HistoryPage = () => {
                     {selectedPost.content || <span className="italic text-muted-foreground">No caption</span>}
                   </div>
                 </div>
+              </div>
               </div>
             </motion.div>
           </>
