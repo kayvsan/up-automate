@@ -110,6 +110,12 @@ export const UploadPage = () => {
           platforms,
         };
 
+        if (platforms.some(p => p.platform === 'tiktok')) {
+          payload.tiktokSettings = {
+            videoCoverTimestampMs: 0
+          };
+        }
+
         if (publishMode === 'Schedule' && scheduleDate) {
           payload.scheduledFor = new Date(scheduleDate).toISOString();
         } else {

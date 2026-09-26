@@ -5,3 +5,6 @@ export const fetchPosts = (apiKey, params = {}) =>
 
 export const fetchPost = (apiKey, postId) =>
   createZernioClient(apiKey).get(`/posts/${postId}`);
+
+export const fetchPostAnalytics = (apiKey, postId) =>
+  createZernioClient(apiKey).get('/analytics', { params: { postId } });

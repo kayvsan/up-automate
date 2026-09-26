@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../../shared/hooks/useApp';
-import { fetchPosts } from '../api';
+import { fetchPosts, fetchPostAnalytics } from '../api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Calendar, CheckCircle, Clock, AlertCircle, X, BarChart3, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const HistoryPage = () => {
   const { apiKey, workspaces, activeWorkspace } = useApp();
@@ -13,6 +13,34 @@ export const HistoryPage = () => {
   const [viewAll, setViewAll] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [postAnalytics, setPostAnalytics] = useState(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  useEffect(() => {
+    if (selectedPost && selectedPost.status === 'published') {
+      loadAnalytics(selectedPost._id);
+    } else {
+      setPostAnalytics(null);
+    }
+  }, [selectedPost]);
+
+  const loadAnalytics = async (postId) => {
+    try {
+      setLoadingAnalytics(true);
+      let targetKey = apiKey;
+      if (viewAll && selectedPost?.workspaceLabel) {
+         const ws = workspaces.find(w => w.label === selectedPost.workspaceLabel);
+         if (ws) targetKey = ws.apiKey;
+      }
+      const res = await fetchPostAnalytics(targetKey, postId);
+      setPostAnalytics(res.data || null);
+    } catch (err) {
+      console.error("Failed to load analytics", err);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
 
   useEffect(() => {
     // Reset page to 1 when toggling viewAll
@@ -157,7 +185,7 @@ export const HistoryPage = () => {
               {posts.map((post, index) => {
                 const isLast = index === posts.length - 1;
                 return (
-                  <tr key={post._id} className={`hover:bg-secondary/20 transition-colors ${!isLast ? 'border-b-2 border-black' : ''}`}>
+                  <tr key={post._id} className={`hover:bg-secondary/20 transition-colors cursor-pointer ${!isLast ? 'border-b-2 border-black' : ''}`} onClick={() => setSelectedPost(post)}>
                     <td className="p-4 border-r-2 border-black align-top">
                       <div className="w-20 h-20 bg-secondary border-2 border-black rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
                         {post.mediaItems?.[0]?.url ? (
@@ -216,7 +244,7 @@ export const HistoryPage = () => {
         {/* ── MOBILE CARD LIST ── */}
         <div className="sm:hidden flex flex-col gap-3">
           {posts.map((post) => (
-            <div key={post._id} className="bg-background border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div key={post._id} className="bg-background border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" onClick={() => setSelectedPost(post)}>
               <div className="flex items-start gap-3 p-3">
                 {/* Thumbnail */}
                 <div className="w-16 h-16 bg-secondary border-2 border-black rounded-lg overflow-hidden flex items-center justify-center shrink-0">
@@ -279,6 +307,130 @@ export const HistoryPage = () => {
           </button>
         </div>
       )}
+      
+      {/* Post Details Modal */}
+      <AnimatePresence>
+        {selectedPost && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedPost(null)}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-32px)] max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-black">Post Details</h2>
+                <button onClick={() => setSelectedPost(null)} className="p-2 bg-gray-100 hover:bg-[#fef08a] hover:-translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] border-2 border-black rounded-xl transition-all">
+                  <X size={20} strokeWidth={3} />
+                </button>
+              </div>
+
+              {selectedPost.mediaItems?.[0]?.url && (
+                <div className="w-full h-48 bg-secondary border-2 border-black rounded-xl overflow-hidden mb-6 flex items-center justify-center">
+                  {selectedPost.mediaItems[0].type === 'video' || selectedPost.mediaItems[0].url.match(/\.(mp4|mov|webm|mkv)$/i) ? (
+                    <video src={selectedPost.mediaItems[0].url} className="w-full h-full object-cover" controls />
+                  ) : (
+                    <img src={selectedPost.mediaItems[0].url} alt="Media" className="w-full h-full object-cover" />
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">Status</p>
+                    <div>{getStatusBadge(selectedPost.status)}</div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">Schedule / Date</p>
+                    <p className="font-bold text-sm">
+                      {selectedPost.scheduledFor ? format(new Date(selectedPost.scheduledFor), 'MMM dd, yyyy · HH:mm') : 'Immediate'}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">Platforms</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedPost.platforms?.map(p => getPlatformBadge(p.platform))}
+                  </div>
+                </div>
+
+                {selectedPost.workspaceLabel && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">Workspace</p>
+                    <span className="text-sm font-bold bg-[#fef08a] border-2 border-black px-2 py-1 rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] inline-block">
+                      {selectedPost.workspaceLabel}
+                    </span>
+                  </div>
+                )}
+
+                {selectedPost.status === 'published' && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 tracking-wider flex items-center gap-1"><BarChart3 size={14} /> Analytics</p>
+                    {loadingAnalytics ? (
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground bg-gray-50 border-2 border-black p-4 rounded-xl">
+                        <Loader2 size={16} className="animate-spin" /> Fetching insights...
+                      </div>
+                    ) : postAnalytics?.syncStatus === 'pending' ? (
+                      <div className="bg-[#fef08a] border-2 border-black p-4 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-start gap-3">
+                        <Clock className="shrink-0 mt-0.5" size={18} />
+                        <div>
+                          <p className="font-black text-sm mb-1">Analytics Pending</p>
+                          <p className="text-xs font-bold text-gray-700">{postAnalytics.message || 'Analytics are being synced from the platform. Please try again in a few moments.'}</p>
+                        </div>
+                      </div>
+                    ) : postAnalytics?.analytics ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.likes || 0}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Likes</p>
+                        </div>
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.comments || 0}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Cmmts</p>
+                        </div>
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.shares || 0}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Shares</p>
+                        </div>
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.views || postAnalytics.analytics.impressions || 0}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Views</p>
+                        </div>
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.saves || 0}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Saves</p>
+                        </div>
+                        <div className="bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center">
+                          <p className="text-xl font-black leading-none mb-1">{postAnalytics.analytics.engagementRate ? `${postAnalytics.analytics.engagementRate}%` : '0%'}</p>
+                          <p className="text-[9px] uppercase font-bold text-muted-foreground leading-none">Eng.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-bold text-muted-foreground bg-gray-50 border-2 border-black p-4 rounded-xl">No analytics data available yet.</p>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">Caption</p>
+                  <div className="bg-secondary/30 border-2 border-black rounded-xl p-4 whitespace-pre-wrap text-sm font-bold leading-relaxed max-h-48 overflow-y-auto shadow-inner">
+                    {selectedPost.content || <span className="italic text-muted-foreground">No caption</span>}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
