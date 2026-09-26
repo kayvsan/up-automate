@@ -193,14 +193,14 @@ export const Dashboard = () => {
     >
       
       {/* Header */}
-      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold mb-2 text-foreground">Welcome, {profile?.name}</h1>
-          <p className="text-lg text-muted-foreground">Your social media command center for <span className="font-bold text-foreground">{activeWorkspace?.label}</span>.</p>
+          <h1 className="text-2xl sm:text-4xl font-extrabold mb-2 text-foreground">Welcome, {profile?.name}</h1>
+          <p className="text-sm sm:text-lg text-muted-foreground">Your social media command center for <span className="font-bold text-foreground">{activeWorkspace?.label}</span>.</p>
         </div>
         <div className="flex gap-3 shrink-0">
-          <button onClick={() => navigate('/upload')} className="btn flex items-center gap-2 px-5 py-2">
-            <Upload size={18} /> New Post
+          <button onClick={() => navigate('/upload')} className="btn flex items-center gap-2 px-4 py-2 text-sm">
+            <Upload size={16} /> New Post
           </button>
         </div>
       </div>

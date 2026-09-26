@@ -84,14 +84,14 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="bg-white p-8 md:p-12 border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in w-full max-w-2xl">
-        <div className="text-center mb-10">
-          <div className="bg-primary w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
-            <Key size={40} color="black" />
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-6 bg-background">
+      <div className="bg-white p-5 sm:p-8 md:p-12 border-4 border-black rounded-2xl sm:rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-fade-in w-full max-w-2xl">
+        <div className="text-center mb-8">
+          <div className="bg-primary w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
+            <Key size={32} color="black" />
           </div>
-          <h2 className="text-4xl font-black mb-3 text-black">Setup Workspaces</h2>
-          <p className="text-lg font-bold text-gray-600">Hubungkan berbagai akun Anda untuk posting paralel.</p>
+          <h2 className="text-3xl sm:text-4xl font-black mb-3 text-black">Setup Workspaces</h2>
+          <p className="text-base sm:text-lg font-bold text-gray-600">Hubungkan berbagai akun Anda untuk posting paralel.</p>
         </div>
 
         <form onSubmit={handleSave}>

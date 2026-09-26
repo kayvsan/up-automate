@@ -105,10 +105,10 @@ export const HistoryPage = () => {
       transition={{ type: "spring", visualDuration: 0.6, bounce: 0.4 }}
       className="max-w-6xl mx-auto pb-20"
     >
-      <div className="mb-10 flex flex-col sm:flex-row justify-between items-start gap-4">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold mb-2 text-foreground">Post History</h1>
-          <p className="text-lg text-muted-foreground">Monitor your automated social media posts</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 text-foreground">Post History</h1>
+          <p className="text-base sm:text-lg text-muted-foreground">Monitor your automated social media posts</p>
         </div>
         
         {workspaces.length > 1 && (
@@ -139,7 +139,9 @@ export const HistoryPage = () => {
           <p className="text-muted-foreground">You haven't scheduled or published any posts yet.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <>
+        {/* ── DESKTOP/TABLET TABLE ── */}
+        <div className="hidden sm:block overflow-x-auto rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <table className="w-full text-left border-collapse bg-background">
             <thead>
               <tr className="bg-secondary border-b-2 border-black">
@@ -156,8 +158,6 @@ export const HistoryPage = () => {
                 const isLast = index === posts.length - 1;
                 return (
                   <tr key={post._id} className={`hover:bg-secondary/20 transition-colors ${!isLast ? 'border-b-2 border-black' : ''}`}>
-                    
-                    {/* Media Column */}
                     <td className="p-4 border-r-2 border-black align-top">
                       <div className="w-20 h-20 bg-secondary border-2 border-black rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
                         {post.mediaItems?.[0]?.url ? (
@@ -178,27 +178,17 @@ export const HistoryPage = () => {
                         )}
                       </div>
                     </td>
-
-                    {/* Caption Column */}
                     <td className="p-4 border-r-2 border-black align-top">
                       <p className="font-bold text-sm whitespace-pre-wrap line-clamp-3 leading-snug">
                         {post.content || <span className="italic text-muted-foreground">No caption</span>}
                       </p>
                     </td>
-
-                    {/* Status Column */}
-                    <td className="p-4 border-r-2 border-black align-top">
-                      {getStatusBadge(post.status)}
-                    </td>
-
-                    {/* Platforms Column */}
+                    <td className="p-4 border-r-2 border-black align-top">{getStatusBadge(post.status)}</td>
                     <td className="p-4 border-r-2 border-black align-top">
                       <div className="flex flex-wrap gap-1.5">
                         {post.platforms?.map(p => getPlatformBadge(p.platform))}
                       </div>
                     </td>
-
-                    {/* Workspace Column (Only if viewing all) */}
                     {viewAll && (
                       <td className="p-4 border-r-2 border-black align-top">
                         {post.workspaceLabel && (
@@ -208,8 +198,6 @@ export const HistoryPage = () => {
                         )}
                       </td>
                     )}
-
-                    {/* Date Column */}
                     <td className="p-4 align-top text-sm">
                       <strong className="block text-foreground font-black mb-0.5">
                         {post.scheduledFor ? format(new Date(post.scheduledFor), 'MMM dd, yyyy') : 'Immediate'}
@@ -218,13 +206,55 @@ export const HistoryPage = () => {
                         {post.scheduledFor ? format(new Date(post.scheduledFor), 'HH:mm') : ''}
                       </span>
                     </td>
-
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+
+        {/* ── MOBILE CARD LIST ── */}
+        <div className="sm:hidden flex flex-col gap-3">
+          {posts.map((post) => (
+            <div key={post._id} className="bg-background border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="flex items-start gap-3 p-3">
+                {/* Thumbnail */}
+                <div className="w-16 h-16 bg-secondary border-2 border-black rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                  {post.mediaItems?.[0]?.url ? (
+                    post.mediaItems[0].type === 'video' || post.mediaItems[0].url.match(/\.(mp4|mov|webm|mkv)$/i) ? (
+                      <a href={post.mediaItems[0].url} target="_blank" rel="noopener noreferrer" className="relative w-full h-full bg-black flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </a>
+                    ) : (
+                      <img src={post.mediaItems[0].url} alt="Media" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/80x80?text=Media'; }} />
+                    )
+                  ) : (
+                    <span className="text-[10px] font-bold text-muted-foreground">None</span>
+                  )}
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm line-clamp-2 leading-snug mb-2">
+                    {post.content || <span className="italic text-muted-foreground">No caption</span>}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {getStatusBadge(post.status)}
+                    {post.platforms?.map(p => getPlatformBadge(p.platform))}
+                  </div>
+                </div>
+              </div>
+              <div className="px-3 pb-3 flex items-center justify-between border-t border-black/10 pt-2">
+                <span className="text-xs font-bold text-muted-foreground">
+                  {post.scheduledFor ? format(new Date(post.scheduledFor), 'MMM dd, yyyy · HH:mm') : 'Immediate'}
+                </span>
+                {viewAll && post.workspaceLabel && (
+                  <span className="text-[10px] font-black bg-secondary border border-black/30 px-2 py-0.5 uppercase rounded">{post.workspaceLabel}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
       
       {/* Pagination Controls */}
