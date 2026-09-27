@@ -12,6 +12,8 @@ export const UploadPage = () => {
   const { apiKey, allAccounts, workspaces, profile } = useApp();
   const [file, setFile] = useState(null);
   const [mediaRef, setMediaRef] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverRef, setCoverRef] = useState(null);
   const [uploading, setUploading] = useState(false);
   
   const [caption, setCaption] = useState('');
@@ -45,6 +47,42 @@ export const UploadPage = () => {
       handleUpload(selected);
     }
   });
+
+  const { getRootProps: getCoverRootProps, getInputProps: getCoverInputProps, isDragActive: isCoverDragActive } = useDropzone({
+    accept: { 'image/*': [] },
+    maxFiles: 1,
+    onDrop: async (acceptedFiles) => {
+      const selected = acceptedFiles[0];
+      setCoverFile(selected);
+      handleCoverUpload(selected);
+    }
+  });
+
+  const handleCoverUpload = async (fileToUpload) => {
+    try {
+      setUploading(true);
+      const presignRes = await getPresignedUrl(apiKey, {
+        filename: fileToUpload.name,
+        contentType: fileToUpload.type,
+        size: fileToUpload.size
+      });
+      
+      const { uploadUrl, publicUrl } = presignRes.data;
+
+      await axios.put(uploadUrl, fileToUpload, {
+        headers: { 'Content-Type': fileToUpload.type }
+      });
+
+      setCoverRef(publicUrl);
+      toast.success('Cover uploaded successfully');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Cover upload failed');
+      setCoverFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleUpload = async (fileToUpload) => {
     try {
@@ -106,13 +144,14 @@ export const UploadPage = () => {
 
         const payload = {
           content: caption,
-          mediaItems: [{ url: mediaRef }],
+          mediaItems: [{ url: mediaRef, ...(coverRef ? { coverUrl: coverRef } : {}) }],
           platforms,
         };
 
         if (platforms.some(p => p.platform === 'tiktok')) {
           payload.tiktokSettings = {
-            videoCoverTimestampMs: 0
+            videoCoverTimestampMs: 0,
+            ...(coverRef ? { videoCoverImageUrl: coverRef } : {})
           };
         }
 
@@ -141,6 +180,7 @@ export const UploadPage = () => {
       if (failures.length === 0) {
         // Reset only if all succeeded
         setCaption(''); setFile(null); setMediaRef(null);
+        setCoverFile(null); setCoverRef(null);
         setScheduleDate(''); setSelectedAccounts([]);
       }
     } catch (err) {
@@ -180,7 +220,7 @@ export const UploadPage = () => {
             
             <div {...getRootProps()} className={`dropzone p-8 border-2 border-dashed rounded-xl transition-all ${isDragActive ? 'border-primary bg-secondary' : 'border-border bg-background hover:bg-secondary/50'}`}>
               <input {...getInputProps()} />
-              {uploading && !mediaRef ? (
+              {uploading && !mediaRef && file ? (
                 <div className="flex flex-col items-center gap-2">
                   <UploadCloud className="animate-bounce text-primary" size={32} />
                   <p className="font-bold">Uploading to cloud...</p>
@@ -197,6 +237,30 @@ export const UploadPage = () => {
                   <p className="font-bold">+ Add media</p>
                 </div>
               )}
+            </div>
+
+            <div className="mt-4">
+              <h4 className="font-bold text-sm text-muted-foreground lowercase mb-2">cover / thumbnail (optional)</h4>
+              <div {...getCoverRootProps()} className={`dropzone p-4 border-2 border-dashed rounded-xl transition-all ${isCoverDragActive ? 'border-primary bg-secondary' : 'border-border bg-background hover:bg-secondary/50'}`}>
+                <input {...getCoverInputProps()} />
+                {uploading && !coverRef && coverFile ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <UploadCloud className="animate-bounce text-primary" size={24} />
+                    <p className="text-sm font-bold">Uploading cover...</p>
+                  </div>
+                ) : coverRef ? (
+                  <div className="flex flex-col items-center gap-1 text-primary">
+                    <CheckCircle size={24} />
+                    <p className="text-sm font-bold">Cover Ready</p>
+                    <small className="text-xs text-muted-foreground font-medium">{coverFile?.name}</small>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-muted-foreground cursor-pointer">
+                    <UploadCloud size={24} />
+                    <p className="text-sm font-bold">+ Add custom cover image</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
