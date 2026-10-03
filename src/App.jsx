@@ -9,6 +9,7 @@ import { AccountsPage } from './features/accounts/components/AccountsPage';
 import { UploadPage } from './features/posts/components/UploadPage';
 import { HistoryPage } from './features/history/components/HistoryPage';
 import { NotFound } from './shared/components/NotFound';
+import { FacebookCallbackPage } from './features/accounts/components/FacebookCallbackPage';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
             <Route path="upload" element={<UploadPage />} />
             <Route path="history" element={<HistoryPage />} />
           </Route>
+          <Route path="connect/facebook/callback" element={<FacebookCallbackPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

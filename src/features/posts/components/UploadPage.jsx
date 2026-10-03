@@ -38,6 +38,24 @@ export const UploadPage = () => {
     customCaption: ''
   });
 
+  const [ytSettings, setYtSettings] = useState({
+    title: '',
+    visibility: 'public',
+    madeForKids: false,
+    firstComment: '',
+    containsSyntheticMedia: false,
+    categoryId: '22',
+    playlistId: '',
+    customCaption: '',
+  });
+
+  const [fbSettings, setFbSettings] = useState({
+    contentType: 'feed', // feed, reel, story
+    draft: false,
+    firstComment: '',
+    customCaption: '',
+  });
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'video/*': [], 'image/*': [] },
     maxFiles: 1,
@@ -139,6 +157,28 @@ export const UploadPage = () => {
           const p = { platform: acc.platform, accountId: acc._id };
           if (acc.platform === 'instagram') p.customText = igSettings.customCaption || undefined;
           if (acc.platform === 'tiktok') p.customText = ttSettings.customCaption || undefined;
+          if (acc.platform === 'youtube') {
+            if (ytSettings.customCaption) p.customContent = ytSettings.customCaption;
+            p.platformSpecificData = {
+              ...(ytSettings.title ? { title: ytSettings.title } : {}),
+              visibility: ytSettings.visibility,
+              madeForKids: ytSettings.madeForKids,
+              containsSyntheticMedia: ytSettings.containsSyntheticMedia,
+              categoryId: ytSettings.categoryId,
+              ...(ytSettings.firstComment ? { firstComment: ytSettings.firstComment } : {}),
+              ...(ytSettings.playlistId ? { playlistId: ytSettings.playlistId } : {}),
+            };
+          }
+          if (acc.platform === 'facebook') {
+            if (fbSettings.customCaption) p.customContent = fbSettings.customCaption;
+            p.platformSpecificData = {
+              ...(fbSettings.contentType !== 'feed' ? { contentType: fbSettings.contentType } : {}),
+              ...(fbSettings.firstComment ? { firstComment: fbSettings.firstComment } : {}),
+              facebookSettings: {
+                draft: fbSettings.draft,
+              },
+            };
+          }
           return p;
         });
 
@@ -192,6 +232,24 @@ export const UploadPage = () => {
 
   const hasInstagram = selectedAccounts.some(id => allAccounts.find(a => a._id === id)?.platform === 'instagram');
   const hasTiktok = selectedAccounts.some(id => allAccounts.find(a => a._id === id)?.platform === 'tiktok');
+  const hasYoutube = selectedAccounts.some(id => allAccounts.find(a => a._id === id)?.platform === 'youtube');
+  const hasFacebook = selectedAccounts.some(id => allAccounts.find(a => a._id === id)?.platform === 'facebook');
+
+  const YT_CATEGORIES = [
+    { id: '1', label: 'Film & Animation' },
+    { id: '2', label: 'Autos & Vehicles' },
+    { id: '10', label: 'Music' },
+    { id: '15', label: 'Pets & Animals' },
+    { id: '17', label: 'Sports' },
+    { id: '20', label: 'Gaming' },
+    { id: '22', label: 'People & Blogs' },
+    { id: '23', label: 'Comedy' },
+    { id: '24', label: 'Entertainment' },
+    { id: '25', label: 'News & Politics' },
+    { id: '26', label: 'Howto & Style' },
+    { id: '27', label: 'Education' },
+    { id: '28', label: 'Science & Technology' },
+  ];
 
   return (
     <motion.div 
@@ -339,6 +397,213 @@ export const UploadPage = () => {
             </div>
           )}
 
+          {/* YouTube Settings Panel */}
+          {hasYoutube && (
+            <div className="glass-panel p-6 border-l-8 border-l-[#FF0000]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-[#FF0000] text-white p-1.5 rounded-lg shadow-sm">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
+                  </svg>
+                </div>
+                <h3 className="font-black text-xl">YouTube</h3>
+                <span className="ml-auto text-xs font-bold text-muted-foreground bg-secondary px-2 py-1 rounded-md border border-border">Video &lt;3min → Shorts</span>
+              </div>
+
+              <div className="flex flex-col gap-5">
+
+                {/* Title */}
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <label className="block text-sm font-bold text-muted-foreground lowercase">video title</label>
+                    <span className={`text-xs font-bold ${ytSettings.title.length > 90 ? 'text-danger' : 'text-muted-foreground'}`}>{ytSettings.title.length}/100</span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={100}
+                    className="input-field"
+                    placeholder="Leave blank to use first line of caption..."
+                    value={ytSettings.title}
+                    onChange={e => setYtSettings({ ...ytSettings, title: e.target.value })}
+                  />
+                </div>
+
+                {/* Visibility */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">visibility</label>
+                  <div className="flex bg-secondary p-1.5 rounded-lg border-2 border-black">
+                    {['public', 'unlisted', 'private'].map(v => (
+                      <button
+                        key={v}
+                        onClick={e => { e.preventDefault(); setYtSettings({ ...ytSettings, visibility: v }); }}
+                        className={`flex-1 py-1 text-sm font-black uppercase rounded-md transition-colors ${
+                          ytSettings.visibility === v
+                            ? 'bg-white border-2 border-black text-black'
+                            : 'text-muted-foreground hover:text-black border-2 border-transparent'
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">category</label>
+                  <select
+                    className="input-field"
+                    value={ytSettings.categoryId}
+                    onChange={e => setYtSettings({ ...ytSettings, categoryId: e.target.value })}
+                  >
+                    {YT_CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* AI Generated */}
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 w-5 h-5 accent-primary border-2 border-border rounded"
+                    checked={ytSettings.containsSyntheticMedia}
+                    onChange={e => setYtSettings({ ...ytSettings, containsSyntheticMedia: e.target.checked })}
+                  />
+                  <div>
+                    <p className="font-bold">Label as AI/synthetic content</p>
+                    <p className="text-sm text-muted-foreground leading-tight mt-1">Disclose if the video contains AI-generated or altered content. YouTube may add a label.</p>
+                  </div>
+                </label>
+
+                {/* Made for Kids */}
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 w-5 h-5 accent-primary border-2 border-border rounded"
+                    checked={ytSettings.madeForKids}
+                    onChange={e => setYtSettings({ ...ytSettings, madeForKids: e.target.checked })}
+                  />
+                  <div>
+                    <p className="font-bold">Made for Kids (COPPA)</p>
+                    <p className="text-sm text-muted-foreground leading-tight mt-1">Restricts comments, notifications, and ad targeting. Set for child-directed content.</p>
+                  </div>
+                </label>
+
+                {/* Playlist ID */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">playlist ID (optional)</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="PLxxxxxxxxxxxxx"
+                    value={ytSettings.playlistId}
+                    onChange={e => setYtSettings({ ...ytSettings, playlistId: e.target.value })}
+                  />
+                </div>
+
+                {/* First Comment */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">first comment (optional)</label>
+                  <textarea
+                    className="input-field min-h-[80px]"
+                    placeholder="Posted automatically right after upload..."
+                    value={ytSettings.firstComment}
+                    onChange={e => setYtSettings({ ...ytSettings, firstComment: e.target.value })}
+                  />
+                </div>
+
+                {/* Custom Caption */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">custom description (optional)</label>
+                  <textarea
+                    className="input-field min-h-[100px]"
+                    placeholder="Leave blank to use main content... (max 5000 chars)"
+                    maxLength={5000}
+                    value={ytSettings.customCaption}
+                    onChange={e => setYtSettings({ ...ytSettings, customCaption: e.target.value })}
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Facebook Settings Panel */}
+          {hasFacebook && (
+            <div className="glass-panel p-6 border-l-8 border-l-[#1877F2]">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#1877F2] text-white p-1.5 rounded-lg shadow-sm">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <h3 className="font-black text-xl">Facebook</h3>
+                </div>
+
+                {/* Post Type */}
+                <div className="flex bg-secondary p-1.5 rounded-lg border-2 border-black">
+                  {['Feed', 'Reel', 'Story'].map(t => (
+                    <button
+                      key={t}
+                      onClick={e => { e.preventDefault(); setFbSettings({ ...fbSettings, contentType: t.toLowerCase() }); }}
+                      className={`px-3 py-1 text-sm font-black uppercase rounded-md transition-colors ${
+                        fbSettings.contentType === t.toLowerCase()
+                          ? 'bg-white border-2 border-black text-black'
+                          : 'text-muted-foreground hover:text-black border-2 border-transparent'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-5">
+
+                {/* Draft mode */}
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 w-5 h-5 accent-primary border-2 border-border rounded"
+                    checked={fbSettings.draft}
+                    onChange={e => setFbSettings({ ...fbSettings, draft: e.target.checked })}
+                  />
+                  <div>
+                    <p className="font-bold">Save as Draft</p>
+                    <p className="text-sm text-muted-foreground leading-tight mt-1">Creates the post in Facebook Publishing Tools instead of publishing. Not available for Stories.</p>
+                  </div>
+                </label>
+
+                {/* First Comment */}
+                {fbSettings.contentType !== 'story' && (
+                  <div>
+                    <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">first comment (optional)</label>
+                    <textarea
+                      className="input-field min-h-[80px]"
+                      placeholder="Posted automatically right after publishing..."
+                      value={fbSettings.firstComment}
+                      onChange={e => setFbSettings({ ...fbSettings, firstComment: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {/* Custom Caption */}
+                <div>
+                  <label className="block text-sm font-bold text-muted-foreground lowercase mb-2">custom caption (optional)</label>
+                  <textarea
+                    className="input-field min-h-[100px]"
+                    placeholder="Leave blank to use main content..."
+                    value={fbSettings.customCaption}
+                    onChange={e => setFbSettings({ ...fbSettings, customCaption: e.target.value })}
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* RIGHT COLUMN: Accounts & Publishing */}
@@ -363,9 +628,16 @@ export const UploadPage = () => {
                       const isSelected = selectedAccounts.includes(acc._id);
                       const isIg = acc.platform === 'instagram';
                       const isTt = acc.platform === 'tiktok';
-                      
+                      const isYt = acc.platform === 'youtube';
+
+                      const platformBg = isIg
+                        ? 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]'
+                        : isTt ? 'bg-black'
+                        : isYt ? 'bg-[#FF0000]'
+                        : 'bg-black';
+
                       return (
-                        <button 
+                        <button
                           key={acc._id}
                           onClick={() => toggleAccount(acc._id)}
                           className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${isSelected ? 'border-primary bg-primary/10 shadow-[4px_4px_0px_0px_var(--primary)] -translate-y-1' : 'border-border bg-background hover:bg-secondary shadow-sm'}`}
@@ -373,14 +645,18 @@ export const UploadPage = () => {
                           {acc.profilePicture ? (
                             <img src={acc.profilePicture} className="w-10 h-10 rounded-lg border-2 border-border object-cover" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg border-2 border-border bg-black text-white flex items-center justify-center font-bold uppercase">
+                            <div className={`w-10 h-10 rounded-lg border-2 border-border ${platformBg} text-white flex items-center justify-center font-bold uppercase`}>
                               {isIg ? (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                                 </svg>
-                              ) : isTt ? 'T' : acc.platform.charAt(0)}
+                              ) : isTt ? (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 15.66a6.34 6.34 0 0 0 10.86 4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.03z"/></svg>
+                              ) : isYt ? (
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+                              ) : acc.platform.charAt(0)}
                             </div>
                           )}
                           <div>
